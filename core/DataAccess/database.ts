@@ -2,8 +2,8 @@ const { Sequelize } = require('sequelize');
 
 // Initialize Sequelize with MySQL connection details
 const sequelize = new Sequelize('ovec', 'web', 'web', {
-  host: 'localhost', // or your remote host
-  dialect: 'mysql'   // Specify the database type (MySQL in this case)
+  host: 'localhost',
+  dialect: 'mysql' 
 });
 
 // Test the connection

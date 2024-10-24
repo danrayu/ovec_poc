@@ -6,5 +6,6 @@ export default class PluginConfig {
     public coreVersion,
     public description: string,
     public author: string,
+    public enabled: boolean
   ) {}
 }
