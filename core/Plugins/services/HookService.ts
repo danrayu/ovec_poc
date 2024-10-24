@@ -1,29 +1,33 @@
-import { injectable } from "inversify";
-import { Context } from "../Types/Context";
+import { inject, injectable } from "inversify";
 import { Action } from "../Types/Action";
+import { ContextService } from "./ContextService";
 
 export type hook = "init" | "finish";
 
 @injectable()
 export class HookService {
-  public addAction(hook: hook, action: Action, priority: number, context: Context) {
-    context.addAction(hook, action, priority);
+  private contextService: ContextService;
+  constructor(@inject(ContextService) contextService: ContextService) {
+    this.contextService = contextService;
   }
 
-  public async executeHook(hook: hook, context: Context) {
-    const actionPriorities = context.hookActionQueue[hook]
+  public addAction(hook: hook, action: Action, priority: number) {
+    this.contextService.context.addAction(hook, action, priority);
+  }
+
+  public async executeHook(hook: hook) {
+    const actionPriorities = this.contextService.context.hookActionQueue[hook]
 
     const sortedKeys = Object.keys(actionPriorities)
       .map(Number)
       .sort((a, b) => a - b);
-    console.log(hook)
     for (const key of sortedKeys) {
       const actionList: Array<Action> = actionPriorities[key];
       const callList = [];
       
       for (const action of actionList) {
         const run = async () => {
-          context = await action(context);
+          this.contextService.context = await action(this.contextService.context);
         }
         callList.push(run())
       }

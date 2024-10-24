@@ -4,16 +4,19 @@ import PluginInfo from "../Types/PluginInfo";
 import { readFileSync } from "fs";
 import { hook, HookService } from "./HookService";
 import { Action } from "../Types/Action";
-import { Context } from "../Types/Context";
+import { ContextService } from "./ContextService";
 const path = require("path");
 const fs = require("fs");
 
 @injectable()
 export class PluginManagerService {
   private hookService;
+  private contextServise;
 
-  constructor(@inject(HookService) hookService: HookService) {
+  constructor(@inject(HookService) hookService: HookService, @inject(ContextService) contextService: ContextService) {
     this.hookService = hookService;
+    this.contextServise = contextService;
+    this.registerAllEnabledPluginHooks();
   }
 
   // Find installed plugins from package.json
@@ -195,6 +198,27 @@ export class PluginManagerService {
     }
   }
 
+  public async uninstallPlugin(pluginName: string): Promise<void> {
+    try {
+        // Find the plugin in the database by name
+        const pluginConfig = await PluginModel.findOne({
+            where: { name: pluginName },
+        });
+
+        // If plugin is not found, throw an error
+        if (!pluginConfig) {
+            throw new Error(`Plugin ${pluginName} not found in the database.`);
+        }
+
+        // Delete the plugin from the database
+        await pluginConfig.destroy();
+        console.log(`Plugin ${pluginName} uninstalled successfully.`);
+    } catch (error) {
+        console.error(`Error uninstalling plugin ${pluginName}: ${error}`);
+        throw error;
+    }
+}
+
   // Install multiple plugins in parallel
   public async installPlugins(plugins: Array<PluginInfo>): Promise<void> {
     const installList = plugins.map(pluginInfo => this.installPlugin(pluginInfo));
@@ -218,11 +242,31 @@ export class PluginManagerService {
     }
   }
 
-  public async registerEnabledPluginHook(plugin_name, context: Context) {
-    const add_action = require(plugin_name)
-    const aa = (hook: hook, action: Action, priority: number) => {
-      this.hookService.addAction(hook, action, priority, context)
+  public async registerEnabledPluginHook(plugin_name: string) {
+    let plugin;
+    try {
+      plugin = require(plugin_name)
     }
-    add_action(aa)
+    catch (e) {
+      console.log(`Error importing ${plugin_name} plugin: ${e}`)
+      return;
+    }
+    const {hook_actions, services} = plugin;
+
+    for (const action of hook_actions) {
+      const actionAdder = (hook: hook, action: Action, priority: number) => {
+        this.hookService.addAction(hook, action, priority, this.contextServise.context)
+      }
+      action(actionAdder)
+    }
+  }
+
+  public async registerAllEnabledPluginHooks() {
+    const enPlugins = await this.getAllPluginConfigs();
+    for (const plugin of enPlugins) {
+      if (plugin.enabled) {
+        await this.registerEnabledPluginHook(plugin.name)
+      }
+    }
   }
 }
