@@ -1,23 +1,13 @@
-import { inject, injectable } from "inversify";
+import { injectable } from "inversify";
 import PluginModel from "../Models/PluginModel";
 import PluginInfo from "../Types/PluginInfo";
 import { readFileSync } from "fs";
-import { hook, HookService } from "./HookService";
-import { Action } from "../Types/Action";
-import { ContextService } from "./ContextService";
+import { add_action } from "../API/addAction";
 const path = require("path");
 const fs = require("fs");
 
 @injectable()
 export class PluginManagerService {
-  private hookService;
-  private contextServise;
-
-  constructor(@inject(HookService) hookService: HookService, @inject(ContextService) contextService: ContextService) {
-    this.hookService = hookService;
-    this.contextServise = contextService;
-    this.registerAllEnabledPluginHooks();
-  }
 
   // Find installed plugins from package.json
   public findInstalledPlugins(): Array<string> {
@@ -251,13 +241,9 @@ export class PluginManagerService {
       console.log(`Error importing ${plugin_name} plugin: ${e}`)
       return;
     }
-    const {hook_actions, services} = plugin;
-
-    for (const action of hook_actions) {
-      const actionAdder = (hook: hook, action: Action, priority: number) => {
-        this.hookService.addAction(hook, action, priority, this.contextServise.context)
-      }
-      action(actionAdder)
+    const {hook_catchers, services} = plugin;
+    for (const hook_catcher of hook_catchers) {
+      await hook_catcher(add_action)
     }
   }
 

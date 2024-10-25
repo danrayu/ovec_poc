@@ -14,10 +14,8 @@ export class ActionExecutionQueue {
   public addAction(hook: hook, priority: number, action: Action) {
     if (!this[hook][priority]) {
       this[hook][priority] = []
-      console.log("redid priority list")
     }
     this[hook][priority].push(action)
-    console.log(`added priority ${priority} to hook ${hook}`)
   }
 }
 
