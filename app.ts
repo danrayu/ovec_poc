@@ -65,7 +65,7 @@ async function main() {
       } else if (options.enabled) {
         console.log(installed.filter((plugin) => plugin.enabled));
       } else {
-        console.log(findUninstalled());
+        console.log(pluginManager.getInflatedPluginConfigs().map((p) => p.name));
       }
     });
 
@@ -120,7 +120,7 @@ async function main() {
 
   program
     .command("fire")
-    .description("runs all of the enabled plugins.")
+    .description("runs all of the enabled pluginfs.")
     .action(async () => {
       try {
         await hookService.executeHook("init");
@@ -132,6 +132,7 @@ async function main() {
 
   // Parse the arguments
   program.parse(process.argv);
+  return;
 }
 
 main()
