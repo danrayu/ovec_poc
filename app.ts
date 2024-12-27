@@ -1,25 +1,34 @@
 import "reflect-metadata";
-import { InversifyExpressServer } from "inversify-express-utils";
-const express = require("express");
 import { container } from "./core/DependencyInjection/container";
 import "./controller";
 import { PluginManagerService } from "./core/Plugins/services/PluginManagerService";
 import { HookService } from "./core/Plugins/services/HookService";
+import sequelize from "./core/DataAccess/database";
+
+import PluginModel from "./core/Plugins/Models/PluginModel";
+
+async function syncDatabase() {
+  try {
+    await sequelize.authenticate(); // Test connection
+    console.log('Database connection has been established successfully.');
+
+    // Sync all models
+    await sequelize.sync({ alter: true }); // Use `alter` to add the missing table    
+    console.log('All models were synchronized successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  } finally {
+    await sequelize.close(); // Close connection if necessary
+  }
+}
 
 async function main() {
-  // Create the server
-  const server = new InversifyExpressServer(container);
-
-  server.setConfig((app) => {
-    app.use(express.json());
-  });
-
-  const app = server.build();
-
   // testing of services
   const pluginManager =
     container.get<PluginManagerService>(PluginManagerService);
   const hookService = container.get<HookService>(HookService);
+
+  
   await pluginManager.registerAllEnabledPluginHooks();
 
   const { Command } = require("commander");
@@ -65,7 +74,7 @@ async function main() {
       } else if (options.enabled) {
         console.log(installed.filter((plugin) => plugin.enabled));
       } else {
-        console.log(findUninstalled());
+        console.log(pluginManager.getInflatedPluginConfigs().map((p) => p.name));
       }
     });
 
@@ -120,7 +129,7 @@ async function main() {
 
   program
     .command("fire")
-    .description("runs all of the enabled plugins.")
+    .description("runs all of the enabled pluginfs.")
     .action(async () => {
       try {
         await hookService.executeHook("init");
@@ -132,6 +141,7 @@ async function main() {
 
   // Parse the arguments
   program.parse(process.argv);
+  return;
 }
 
 main()

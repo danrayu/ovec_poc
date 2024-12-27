@@ -1,7 +1,6 @@
 const { Sequelize } = require('sequelize');
-
 // Initialize Sequelize with MySQL connection details
-const sequelize = new Sequelize('ovec', 'web', 'web', {
+const sequelize = new Sequelize('ovec', 'dev', 'dev', {
   host: 'localhost',
   dialect: 'mysql' 
 });
@@ -15,5 +14,7 @@ const sequelize = new Sequelize('ovec', 'web', 'web', {
 //     console.error('Unable to connect to the database:', error);
 //   }
 // })();
+
+
 
 export default sequelize;

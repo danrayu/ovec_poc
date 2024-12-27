@@ -161,10 +161,6 @@ export class PluginManagerService {
     }
   }
 
-  public async registerHooks() {
-    
-  }
-
   // Install plugins by adding missing ones to the database based on the file system
   public async installPlugin(pluginInfo: PluginInfo): Promise<void> {
     try {

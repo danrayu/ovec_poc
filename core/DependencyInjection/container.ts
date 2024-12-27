@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 import { PluginManagerService } from "../Plugins/services/PluginManagerService";
 import { HookService } from "../Plugins/services/HookService";
-import { ContextService } from "../Plugins/services/ContextService";
+import { ContextService } from "../Context/Services/ContextService";
 
 const container = new Container();
 container.bind<ContextService>(ContextService).to(ContextService).inSingletonScope();

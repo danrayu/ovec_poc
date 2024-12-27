@@ -1,5 +1,5 @@
-import { hook } from "../services/HookService";
-import { Action } from "./Action";
+import { hook } from "../../Plugins/services/HookService";
+import { Action } from "../../Plugins/Types/Action";
 
 type PriorityRecord = Record<number, Array<Action>>
 
