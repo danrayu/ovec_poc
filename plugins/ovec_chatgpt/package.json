@@ -1,0 +1,15 @@
+{
+    "name": "ovec_chatgpt",
+    "version": "1.0.0",
+    "description": "An OVEC plugin for adding OpenAIs NLP models as options.",
+    "peerDependencies": {
+      "ovec": "^1.0.0"
+    },
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Daniil",
+    "license": "ISC"
+  }
+  

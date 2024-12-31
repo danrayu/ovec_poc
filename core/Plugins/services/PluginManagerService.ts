@@ -1,25 +1,46 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import PluginModel from "../Models/PluginModel";
 import PluginInfo from "../Types/PluginInfo";
 import { readFileSync } from "fs";
-import { add_action } from "../API/addAction";
+import { HookService } from "./HookService";
 const path = require("path");
 const fs = require("fs");
 
 @injectable()
 export class PluginManagerService {
 
+  private hookService: HookService;
+  constructor(@inject(HookService) hookService: HookService) {
+    this.hookService = hookService;
+  }
+
   // Find installed plugins from package.json
   public findInstalledPlugins(): Array<string> {
-    const packageJson = JSON.parse(readFileSync("./package.json", "utf8"));
-    const installedPlugins = Object.keys(packageJson.dependencies).filter(
-      (dep) => dep.startsWith("ovec-")
-    );
-
-    this.inflatePluginConfig(installedPlugins[0]);
-
-    return installedPlugins;
+    const plugin_roots = this.getFilesInDirectory();
+    var plugin_list = []
+    for (const root of plugin_roots) {
+      try {
+        const plugins_dir = `./plugins/${root}/package.json`
+        JSON.parse(readFileSync(plugins_dir, "utf8"));
+        plugin_list.push(root)
+      }
+      catch {
+        continue
+      }
+    }
+    return plugin_list;
   }
+
+  public getFilesInDirectory(filesList = []) {
+    const dirPath = "./plugins"
+    const files = fs.readdirSync(dirPath);
+
+    files.forEach(file => {
+        filesList.push(file);
+    });
+
+    return filesList;
+}
 
   // Get detailed plugin configs from installed plugins
   public getInflatedPluginConfigs(): Array<PluginInfo> {
@@ -37,7 +58,7 @@ export class PluginManagerService {
 
   // Inflate a plugin config based on its package.json
   public inflatePluginConfig(plugin_name: string): PluginInfo {
-    const configPath = path.resolve(`./node_modules/${plugin_name}/package.json`);
+    const configPath = path.resolve(`./plugins/${plugin_name}/package.json`);
     if (!fs.existsSync(configPath)) {
       throw new Error(
         `File not found error: ${plugin_name} is in package.json, but is missing in node_modules.`
@@ -231,15 +252,16 @@ export class PluginManagerService {
   public async registerEnabledPluginHook(plugin_name: string) {
     let plugin;
     try {
-      plugin = require(plugin_name)
+      plugin = require(`../../../plugins/${plugin_name}`);
+      // plugin = require(path.join(__dirname, 'plugins', `${plugin_name}`));
     }
     catch (e) {
       console.log(`Error importing ${plugin_name} plugin: ${e}`)
       return;
     }
-    const {hook_catchers, services} = plugin;
-    for (const hook_catcher of hook_catchers) {
-      await hook_catcher(add_action)
+    const {hookCallbacks, services} = plugin;
+    for (const hookCallback of hookCallbacks) {
+      await this.hookService.addHookCallback(hookCallback)
     }
   }
 

@@ -16,7 +16,6 @@
     "inversify": "^6.0.2",
     "inversify-express-utils": "^6.4.6",
     "mysql2": "^3.11.3",
-    "ovec-chatgpt": "1.0.0",
     "ovec-google-tts": "1.0.0",
     "reflect-metadata": "^0.2.2",
     "sequelize": "^6.37.4"

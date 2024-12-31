@@ -1,0 +1,1 @@
+export type Hook = "install" | "uninstall" | "init" | "register_modules" | "module_exec";
